@@ -46,7 +46,7 @@ class Screen():
     
     # Обрезание скриншота для зоны кнопки 'ЗАБРАТЬ'
     def TakeZone(self):
-        imgCrop = self.screenshot.crop((984, 965, 1050, 1010))
+        imgCrop = self.screenshot.crop((1050, 950, 1150, 990))
         return cv2.cvtColor(np.array(imgCrop), cv2.COLOR_RGB2BGR) 
     # --------------------------------------------
     

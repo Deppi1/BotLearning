@@ -6,13 +6,13 @@ import threading
 import random
 from screenshot import Screen
 from PIL import Image
-
+from pywinauto.keyboard import send_keys
 from time import sleep, perf_counter
 
 
 hookHeight = 100 # min = 15, max = 120
-castingMin = 16 # Время заброса в ms
-castingMax = 18 # Время заброса в ms
+castingMin = 10 # Время заброса в ms
+castingMax = 10 # Время заброса в ms
 
 fishCount = 0
 trashCount = 0
@@ -64,9 +64,9 @@ class main():
                and gw.getWindowsWithTitle('FishingPlanet')[0].isActive):
                 
                 if(y > hookHeight):
-                    pyautogui.mouseDown(button='left')
+                    send_keys("{VK_SPACE down}")
                 else:
-                    pyautogui.mouseUp(button='left')
+                    send_keys("{VK_SPACE up}")
             # --------------------------------
         else:
             cv2.putText(img, 'area < 200', (5,30), cv2.FONT_HERSHEY_DUPLEX, 0.5, (0,0,255))
@@ -247,10 +247,11 @@ class main():
             and sethook == True
             and gw.getWindowsWithTitle('FishingPlanet')[0].isActive):
             
-            pyautogui.moveTo(1180, 1120, 2)
+            pyautogui.moveTo(1140, 1100, 2)
             pyautogui.mouseDown(button='left')
             sleep(random.randint(2, 5) / 10)
             pyautogui.mouseUp(button='left')
+            trashCount += 1
             print('+1 мусор')
             sethook = False
         # --------------------------------
@@ -276,9 +277,8 @@ class main():
             pyautogui.mouseUp(button='left')
             i = random.randint(6, 8)
             print('Ждём: ' + str(i) + ' сек')
-            print('Забрасываем!')
             sleep(i)
-            
+            print('Забрасываем!')
             pyautogui.mouseDown(button='left')
             sleep(random.randint(castingMin, castingMax) / 10)
             pyautogui.mouseUp(button='left')
@@ -298,6 +298,7 @@ if __name__ == "__main__":
         main.FindStrength(img=screenshot.StrengthZone())
         main.FindTake(img=screenshot.TakeZone())
         main.HookSet()
+            
         
         #end_time = perf_counter()
         #print(f'Выполнение заняло {end_time- start_time: 0.2f} секунд.')
