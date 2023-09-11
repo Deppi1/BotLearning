@@ -10,8 +10,12 @@ from PIL import Image
 from time import sleep, perf_counter
 
 
-hookHeight = 40 # min = 15, max = 120
+hookHeight = 100 # min = 15, max = 120
+castingMin = 16 # Время заброса в ms
+castingMax = 18 # Время заброса в ms
+
 fishCount = 0
+trashCount = 0
 
 windowName = 'FishingPlanet'
 fishFind = False
@@ -190,23 +194,28 @@ class main():
         cv2.imshow('Strength img', img)
         cv2.imshow('Strength mask', mask)
        
-    # ИЗМЕНИТЬ НАЖАТИЕ КНОПОК
     def FindTake(img):
         global sethook
         global fishCount
+        global trashCount
         img = cv2.medianBlur(img, 5)
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
         
-        lower = np.array([13, 167, 216])
-        upper = np.array([15, 200, 221])
-        mask = cv2.inRange(hsv, lower, upper)
+        lowerOrange = np.array([13, 167, 216])
+        upperOrange = np.array([15, 200, 221])
+        maskOrange = cv2.inRange(hsv, lowerOrange, upperOrange)
+
+        momentsOrange = cv2.moments(maskOrange, 1)
+        areaOrange = momentsOrange['m00']
         
-        moments = cv2.moments(mask, 1)
-        x_moment = moments['m10']
-        y_moment = moments['m01']
-        area = moments['m00']
+        lowerGray = np.array([0, 0, 53])
+        upperGray = np.array([0, 0, 80])
+        maskGray = cv2.inRange(hsv, lowerGray, upperGray)
         
-        if (area > 2000
+        momentsGray = cv2.moments(maskGray, 1)
+        areaGray = momentsGray['m00']
+        
+        if (areaOrange > 1000
             and sethook == True
             and gw.getWindowsWithTitle('FishingPlanet')[0].isActive):  
               
@@ -218,23 +227,31 @@ class main():
             print('+1 рыба!')
             sethook = False
             
-            #sleep(random.randint(5, 10) / 10)
+        elif (areaGray > 1000
+            and sethook == True
+            and gw.getWindowsWithTitle('FishingPlanet')[0].isActive):
             
-            #pyautogui.moveTo(1180, 1120, 2)
-            #pyautogui.mouseDown(button='left')
-            #sleep(random.randint(2, 5) / 10)
-            #pyautogui.mouseUp(button='left')
-            #pyautogui.click()
-        
+            pyautogui.moveTo(1180, 1120, 2)
+            pyautogui.mouseDown(button='left')
+            sleep(random.randint(2, 5) / 10)
+            pyautogui.mouseUp(button='left')
+            print('+1 мусор')
+            sethook = False
+            
         cv2.imshow('Find img', img)
-        cv2.imshow('Find mask', mask)
+        cv2.imshow('Find gray mask', maskGray)
+        cv2.imshow('Find orange mask', maskOrange)
      
     def HookSet():
         global sethook
+        global fishCount
+        global trashCount
+        
         if (sethook == False
             and gw.getWindowsWithTitle('FishingPlanet')[0].isActive):
             print('')
             print('Рыб поймано: ' + str(fishCount))
+            print('Мусора поймано: ' + str(trashCount))
             print('Забрасываем!')
             pyautogui.mouseUp(button='left')
             i = random.randint(6, 8)
@@ -242,7 +259,7 @@ class main():
             sleep(i)
             
             pyautogui.mouseDown(button='left')
-            sleep(random.randint(15, 18) / 10)
+            sleep(random.randint(castingMin, castingMax) / 10)
             pyautogui.mouseUp(button='left')
             sethook = True
             
@@ -278,6 +295,7 @@ if __name__ == "__main__":
         main.FindLength(img=screenshot.LengthZone())
         main.FindStrength(img=screenshot.StrengthZone())
         main.FindTake(img=screenshot.TakeZone())
+        
         main.HookSet()
         
         #end_time = perf_counter()
