@@ -22,6 +22,8 @@ fishFind = False
 biteFind = False
 sethook = False
 
+
+
 class main():
     def __init__(self):
         pass
@@ -42,7 +44,7 @@ class main():
         lower_mask = cv2.inRange(hsv, lower1, upper1)
         upper_mask = cv2.inRange(hsv, lower2, upper2)
         full_mask = lower_mask + upper_mask
-        # -------------------
+        # --------------------------------
 
         # Распознаём моменты (скопление необходимых пикселей)
         moments = cv2.moments(full_mask, 1)
@@ -65,13 +67,13 @@ class main():
                     pyautogui.mouseDown(button='left')
                 else:
                     pyautogui.mouseUp(button='left')
-            # ----------------------------------------
+            # --------------------------------
         else:
             cv2.putText(img, 'area < 200', (5,30), cv2.FONT_HERSHEY_DUPLEX, 0.5, (0,0,255))
 
         cv2.imshow('Fish Image', img)
-        # ---------------------------------
-    # ---------------------------
+        # --------------------------------
+    # --------------------------------
     
     
     
@@ -87,7 +89,7 @@ class main():
         lower = np.array([0, 0, 150])
         upper = np.array([0, 0, 255])
         mask = cv2.inRange(hsv, lower, upper)
-        # ------------------------------------------------
+        # --------------------------------
         
         # Распознаём моменты (скопление необходимых пикселей)
         moments = cv2.moments(mask, 1)
@@ -129,9 +131,9 @@ class main():
             else:
                 fishFind = True
                 cv2.putText(img, 'NOT PULL', (5,60), cv2.FONT_HERSHEY_DUPLEX, 0.5, (0,0,255))
-        # ----------------------------------------------------
+        # --------------------------------
         cv2.imshow('Length Image', img)
-    #-------------------------------------------
+    # --------------------------------
         
         
         
@@ -157,11 +159,12 @@ class main():
             return True
         else:
             return False
-        # ---------------------------
-    # -------------------------------------------
+        # --------------------------------
+    # --------------------------------
     
     
     
+    # Поиск силы натяжения лески
     def FindStrength(img):
         global biteFind
         global sethook
@@ -169,13 +172,16 @@ class main():
         img = cv2.medianBlur(img, 5)
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
         
+        # Поиск оттенков синего цвета
         lower = np.array([78, 204, 153])
         upper = np.array([138, 229, 204])
         mask = cv2.inRange(hsv, lower, upper)
+        # --------------------------------
         
         moments = cv2.moments(mask, 1)
         area = moments['m00']
         
+        # Тянем леску если есть клёв
         if (area > 10
             and sethook == True
             and gw.getWindowsWithTitle('FishingPlanet')[0].isActive):
@@ -187,13 +193,16 @@ class main():
             sleep(5)
             pyautogui.mouseUp(button='left')
         else:
-            
             biteFind = False
-            
-        
+        # --------------------------------     
+
         cv2.imshow('Strength img', img)
         cv2.imshow('Strength mask', mask)
-       
+    # --------------------------------
+    
+    
+    
+    # Поиск кнопки 'забрать' или 'отпустить' улов
     def FindTake(img):
         global sethook
         global fishCount
@@ -201,20 +210,25 @@ class main():
         img = cv2.medianBlur(img, 5)
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
         
+        # Поиск оранжевых оттенков для кнопки 'забрать'
         lowerOrange = np.array([13, 167, 216])
         upperOrange = np.array([15, 200, 221])
         maskOrange = cv2.inRange(hsv, lowerOrange, upperOrange)
 
         momentsOrange = cv2.moments(maskOrange, 1)
         areaOrange = momentsOrange['m00']
+        # --------------------------------
         
+        # Поиск серых оттенков для кнопки 'отпустить'
         lowerGray = np.array([0, 0, 53])
         upperGray = np.array([0, 0, 80])
         maskGray = cv2.inRange(hsv, lowerGray, upperGray)
         
         momentsGray = cv2.moments(maskGray, 1)
         areaGray = momentsGray['m00']
+        # --------------------------------
         
+        # Если оранжевых точек > 1000 
         if (areaOrange > 1000
             and sethook == True
             and gw.getWindowsWithTitle('FishingPlanet')[0].isActive):  
@@ -226,7 +240,9 @@ class main():
             fishCount += 1
             print('+1 рыба!')
             sethook = False
-            
+        # --------------------------------
+        
+        # Если серых точек > 1000
         elif (areaGray > 1000
             and sethook == True
             and gw.getWindowsWithTitle('FishingPlanet')[0].isActive):
@@ -237,11 +253,16 @@ class main():
             pyautogui.mouseUp(button='left')
             print('+1 мусор')
             sethook = False
+        # --------------------------------
             
         cv2.imshow('Find img', img)
         cv2.imshow('Find gray mask', maskGray)
         cv2.imshow('Find orange mask', maskOrange)
+    # --------------------------------
      
+     
+     
+    # Заброс крючка
     def HookSet():
         global sethook
         global fishCount
@@ -252,10 +273,10 @@ class main():
             print('')
             print('Рыб поймано: ' + str(fishCount))
             print('Мусора поймано: ' + str(trashCount))
-            print('Забрасываем!')
             pyautogui.mouseUp(button='left')
             i = random.randint(6, 8)
             print('Ждём: ' + str(i) + ' сек')
+            print('Забрасываем!')
             sleep(i)
             
             pyautogui.mouseDown(button='left')
@@ -267,25 +288,6 @@ class main():
      
 if __name__ == "__main__":
     while True:
-        
-        #start_time = perf_counter()
-        
-        #t1 = threading.Thread(target=main.FindFish)
-        #t2 = threading.Thread(target=main.FindLength)
-        
-        #t1.start()
-        #t2.start()
-        
-        #t1.join()
-        #t2.join()
-        
-        #end_time = perf_counter()
-        #print(f'Выполнение заняло {end_time- start_time: 0.2f} секунд.')
-        
-        
-        #------------------------------
-        
-        
         #start_time = perf_counter()
         
         screenshot = Screen()
@@ -295,7 +297,6 @@ if __name__ == "__main__":
         main.FindLength(img=screenshot.LengthZone())
         main.FindStrength(img=screenshot.StrengthZone())
         main.FindTake(img=screenshot.TakeZone())
-        
         main.HookSet()
         
         #end_time = perf_counter()
