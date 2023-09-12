@@ -52,12 +52,20 @@ class Screen():
     
     # Обрезание скриншота для зоны заполненности садка
     def CageZone(self):
-        imgCrop = self.screenshot.crop((75, 185, 118, 232))
+        imgCrop = self.screenshot.crop((94, 212, 99, 215))
         return cv2.cvtColor(np.array(imgCrop), cv2.COLOR_RGB2BGR) 
+    # 75, 185, 118, 232
     # --------------------------------------------
     
+    # Обрезание скриншота для зоны повышения уровня
     def LevelupZone(self):
         imgCrop = self.screenshot.crop((435, 163, 505, 231))
+        return cv2.cvtColor(np.array(imgCrop), cv2.COLOR_RGB2BGR) 
+    # -------------------------------------------- 
+    
+    # Обрезание скриншота для выполнения челленджа
+    def ChallengeZone(self):
+        imgCrop = self.screenshot.crop((280, 290, 340, 350))
         return cv2.cvtColor(np.array(imgCrop), cv2.COLOR_RGB2BGR) 
     # -------------------------------------------- 
     
