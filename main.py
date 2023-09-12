@@ -10,19 +10,19 @@ from pywinauto.keyboard import send_keys
 from time import sleep, perf_counter
 
 
-hookHeight = 100 # min = 15, max = 120
-castingMin = 10 # Время заброса в ms
-castingMax = 10 # Время заброса в ms
+hookHeight = 90 # min = 15, max = 120
+castingMin = 16 # Время заброса в ms
+castingMax = 18 # Время заброса в ms
 
 fishCount = 0
 trashCount = 0
+hookCount = 0
+levelupCount = 0
 
 windowName = 'FishingPlanet'
 fishFind = False
 biteFind = False
 sethook = False
-
-
 
 class main():
     def __init__(self):
@@ -82,6 +82,9 @@ class main():
         global fishFind
         global sethook
         global biteFind
+        
+        findZero = main.FindZeroLength(img=screenshot.ZeroZone())
+        
         img = cv2.medianBlur(img, 5)
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     
@@ -105,7 +108,7 @@ class main():
             
             # Условия для скручивания лески до 0
             if (x < 30 
-                and main.FindZeroLength(img=screenshot.ZeroZone()) == False
+                and findZero == False
                 and biteFind == False
                 and sethook == True
                 and gw.getWindowsWithTitle('FishingPlanet')[0].isActive):
@@ -118,16 +121,26 @@ class main():
                     pyautogui.scroll(1)
                     sleep(0.2)
                 i = 0
-                pyautogui.mouseDown(button='left')
+                send_keys("{VK_SPACE down}")
                 print('Подматываем!')
                 sleep(3)
-                pyautogui.mouseUp(button='left')
+                send_keys("{VK_SPACE up}")
                 while i < 3:
                     i += 1
                     pyautogui.scroll(-1)
                     sleep(0.2)
                 i = 0
                 sethook = False
+            elif(x < 30
+                 and fishFind == True
+                 and findZero == False
+                 and sethook == True):
+                
+                send_keys("{VK_SPACE down}")
+                print('Подматываем!')
+                sleep(1)
+                send_keys("{VK_SPACE up}")
+                
             else:
                 fishFind = True
                 cv2.putText(img, 'NOT PULL', (5,60), cv2.FONT_HERSHEY_DUPLEX, 0.5, (0,0,255))
@@ -186,12 +199,12 @@ class main():
             and sethook == True
             and gw.getWindowsWithTitle('FishingPlanet')[0].isActive):
             biteFind = True
-            pyautogui.mouseDown(button='left')
-            pyautogui.mouseDown(button='right')
+            send_keys("{VK_SPACE down}")
+            send_keys("{VK_MENU down}")
             sleep(random.randint(3, 12) / 10)
-            pyautogui.mouseUp(button='right')
+            send_keys("{VK_MENU up}")
             sleep(5)
-            pyautogui.mouseUp(button='left')
+            send_keys("{VK_SPACE up}")
         else:
             biteFind = False
         # --------------------------------     
@@ -233,12 +246,12 @@ class main():
             and sethook == True
             and gw.getWindowsWithTitle('FishingPlanet')[0].isActive):  
               
-            pyautogui.moveTo(1440, 1120, 2)
-            pyautogui.mouseDown(button='left')
-            sleep(random.randint(2, 5) / 10)
-            pyautogui.mouseUp(button='left')
+            send_keys("{VK_SPACE down}")
+            sleep(0.5)
+            send_keys("{VK_SPACE up}")
             fishCount += 1
             print('+1 рыба!')
+            sleep(3)
             sethook = False
         # --------------------------------
         
@@ -247,12 +260,12 @@ class main():
             and sethook == True
             and gw.getWindowsWithTitle('FishingPlanet')[0].isActive):
             
-            pyautogui.moveTo(1140, 1100, 2)
-            pyautogui.mouseDown(button='left')
-            sleep(random.randint(2, 5) / 10)
-            pyautogui.mouseUp(button='left')
+            send_keys("{BACKSPACE down}")
+            sleep(0.5)
+            send_keys("{BACKSPACE up}")
             trashCount += 1
             print('+1 мусор')
+            sleep(3)
             sethook = False
         # --------------------------------
             
@@ -268,22 +281,98 @@ class main():
         global sethook
         global fishCount
         global trashCount
+        global hookCount
+        global levelupCount
         
         if (sethook == False
             and gw.getWindowsWithTitle('FishingPlanet')[0].isActive):
+            hookCount += 1
             print('')
+            
             print('Рыб поймано: ' + str(fishCount))
             print('Мусора поймано: ' + str(trashCount))
-            pyautogui.mouseUp(button='left')
-            i = random.randint(6, 8)
-            print('Ждём: ' + str(i) + ' сек')
-            sleep(i)
+            print('Уровней получено: ' + str(levelupCount))
+            print('Ждём: 8 сек')
+            sleep(8)
             print('Забрасываем!')
-            pyautogui.mouseDown(button='left')
+            print('Сделано забросов: ' + str(hookCount))
+            send_keys("{VK_SPACE down}")
             sleep(random.randint(castingMin, castingMax) / 10)
-            pyautogui.mouseUp(button='left')
+            send_keys("{VK_SPACE up}")
             sethook = True
+    # --------------------------------
+    
+    
+    
+    # Поиск полной заполненности садка
+    def CageFull(img):
+        global biteFind
+        img = cv2.medianBlur(img, 3)
+        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+        
+        lower = np.array([20, 191, 178])
+        upper = np.array([35, 255, 255])
+        mask = cv2.inRange(hsv, lower, upper)
+
+        moments = cv2.moments(mask, 1)
+        area = moments['m00']
+        
+        if(area > 500
+           and biteFind == False
+           and main.FindZeroLength(img=screenshot.ZeroZone() == True)
+           and gw.getWindowsWithTitle('FishingPlanet')[0].isActive):
+            print('Завершаем день и продаём улов!')
+            sleep(3)
+            send_keys("{t down}")
+            sleep(0.5)
+            send_keys("{t up}")
+            pyautogui.moveRel(0, 325, duration=1)
+            pyautogui.click()
+            pyautogui.moveRel(-50, -225, duration=1)
+            pyautogui.click()
+            pyautogui.moveRel(0, 210, duration=1)
+            pyautogui.click()
+            print('Ждём 15 секунд перед началом нового дня!')
+            sleep(15)
+    # --------------------------------
             
+            
+        
+        cv2.imshow('Cage img', img)
+        cv2.imshow('Cage mask', mask)
+         
+            
+    def LevelUp(img):
+        global sethook
+        global levelupCount
+        
+        img = cv2.medianBlur(img, 3)
+        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+        
+        lower = np.array([40, 200, 200])
+        upper = np.array([50, 220, 220])
+        mask = cv2.inRange(hsv, lower, upper)
+
+        moments = cv2.moments(mask, 1)
+        area = moments['m00']
+        
+        if (area > 2000
+            and gw.getWindowsWithTitle('FishingPlanet')[0].isActive):
+            
+            sleep(2)
+            pyautogui.moveRel(-300, 400, duration=1)
+            pyautogui.click()
+            sleep(2)
+            send_keys("{VK_ESCAPE down}")
+            sleep(0.5)
+            send_keys("{VK_ESCAPE up}")
+            sethook = False
+            levelupCount += 1
+            print('+1 уровень!')
+            sleep(2)
+        
+        cv2.imshow('LevelUp img', img)
+        cv2.imshow('LevelUp mask', mask)
         
      
 if __name__ == "__main__":
@@ -297,10 +386,12 @@ if __name__ == "__main__":
         main.FindLength(img=screenshot.LengthZone())
         main.FindStrength(img=screenshot.StrengthZone())
         main.FindTake(img=screenshot.TakeZone())
+        main.CageFull(img=screenshot.CageZone())
+        main.LevelUp(img=screenshot.LevelupZone())
         main.HookSet()
-            
         
-        #end_time = perf_counter()
+            
+        #end_time = perf_counter()MENUdown
         #print(f'Выполнение заняло {end_time- start_time: 0.2f} секунд.')
         
         cv2.waitKey(1)
