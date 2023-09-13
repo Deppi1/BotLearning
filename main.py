@@ -4,6 +4,7 @@ import pygetwindow as gw
 import pyautogui
 import threading
 import random
+import tgbot
 from screenshot import Screen
 from PIL import Image
 from pywinauto.keyboard import send_keys
@@ -18,6 +19,15 @@ fishCount = 0
 trashCount = 0
 hookCount = 0
 levelupCount = 0
+dayCount = 0
+
+data = {
+    'fishCount': fishCount,
+    'trashCount': trashCount,
+    'hookCount': hookCount,
+    'levelupCount': levelupCount,
+    'dayCount': dayCount
+}
 
 restart = 0
 
@@ -28,15 +38,16 @@ sethook = False
 
 class main():
     def __init__(self):
-        pass
+        self.screenshot = Screen()
     
     # Поиск элемнта рыбы
-    def FindFish(img):
+    def FindFish(self):
         global fishFind
         global hookHeight
         global sethook
         global restart
         
+        img = self.screenshot.FishZone()
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
         # Поиск оттенков красного цвета на рыбе
@@ -56,17 +67,20 @@ class main():
         y_moment = moments['m01']
         area = moments['m00']
 
-        if (area > 100):
+        if (area > 100
+            and area < 500
+            and sethook == True
+            and gw.getWindowsWithTitle('FishingPlanet')[0].isActive):
+            
             restart = 0
             x = int(x_moment / area)
             y = int(y_moment / area)
             cv2.circle(img, (x, y), 3, (255,0,0), -1)
             cv2.putText(img, 'y = ' + str(y), (5,30), cv2.FONT_HERSHEY_DUPLEX, 0.5, (0,255,0))
             
+            
             # Автонажатие лкм для проводки крючка
-            if(fishFind == True
-               and sethook == True 
-               and gw.getWindowsWithTitle('FishingPlanet')[0].isActive):
+            if(fishFind == True):
                 
                 if(y > hookHeight):
                     send_keys("{VK_SPACE down}")
@@ -83,13 +97,14 @@ class main():
     
     
     # Поиск и проверка длины лески
-    def FindLength(img):
+    def FindLength(self):
         global fishFind
         global sethook
         global biteFind
         global restart
         
-        findZero = main.FindZeroLength(img=screenshot.ZeroZone())
+        img = self.screenshot.LengthZone()
+        findZero = self.FindZeroLength()
         
         img = cv2.medianBlur(img, 5)
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
@@ -107,7 +122,7 @@ class main():
         area = moments['m00']
         
         if (area > 400):
-            restart = 0
+            
             x = int(x_moment / area)
             y = int(y_moment / area)
             cv2.circle(img, (x, y), 3, (255,0,0), -1)
@@ -120,6 +135,7 @@ class main():
                 and sethook == True
                 and gw.getWindowsWithTitle('FishingPlanet')[0].isActive):
                 
+                restart = 0
                 fishFind = False
                 cv2.putText(img, 'PULL', (5,60), cv2.FONT_HERSHEY_DUPLEX, 0.5, (0,255,0))
                 i = 0
@@ -158,7 +174,9 @@ class main():
         
         
     # Поиск знака '0' при полном сматывании лески
-    def FindZeroLength(img):
+    def FindZeroLength(self):
+        
+        img = self.screenshot.ZeroZone()
         img = cv2.medianBlur(img, 5)
         imgHSV = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
         
@@ -185,11 +203,12 @@ class main():
     
     
     # Поиск силы натяжения лески
-    def FindStrength(img):
+    def FindStrength(self):
         global biteFind
         global sethook
         global restart
         
+        img = self.screenshot.StrengthZone()
         img = cv2.medianBlur(img, 5)
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
         
@@ -225,12 +244,13 @@ class main():
     
     
     # Поиск кнопки 'забрать' или 'отпустить' улов
-    def FindTake(img):
+    def FindTake(self):
         global sethook
         global fishCount
         global trashCount
         global restart
         
+        img = self.screenshot.TakeZone()
         img = cv2.medianBlur(img, 5)
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
         
@@ -268,13 +288,13 @@ class main():
             
             sleep(1)
             print('Проверка достижений')
-            main.FindChallenge(img=screenshot.ChallengeZone())
+            self.FindChallenge()
             sleep(1)
             print('Проверка повышения уровня')
-            main.FindLevelUp(img=screenshot.LevelupZone())
+            self.FindLevelUp()
             sleep(1)
             print('Проверка заполненности садка')
-            main.FindCageFull(img=screenshot.CageZone())
+            self.FindCageFull()
             sleep(1)
             
             sethook = False
@@ -286,6 +306,7 @@ class main():
             and gw.getWindowsWithTitle('FishingPlanet')[0].isActive):
             
             restart = 0
+            print('Отпускаем рыбу')
             sleep(1)
             send_keys("{BACKSPACE down}")
             sleep(1)
@@ -296,13 +317,13 @@ class main():
             
             sleep(5)
             print('Проверка достижений')
-            main.FindChallenge(img=screenshot.ChallengeZone())
+            self.FindChallenge()
             sleep(1)
             print('Проверка повышения уровня')
-            main.FindLevelUp(img=screenshot.LevelupZone())
+            self.FindLevelUp()
             sleep(1)
             print('Проверка заполненности садка')
-            main.FindCageFull(img=screenshot.CageZone())
+            self.FindCageFull()
             sleep(1)
             
             sethook = False
@@ -316,7 +337,11 @@ class main():
     
     
     # Поиск полной заполненности садка
-    def FindCageFull(img):
+    def FindCageFull(self):
+        global sethook
+        global dayCount
+        
+        img = self.screenshot.CageZone()
         img = cv2.medianBlur(img, 3)
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
         
@@ -328,6 +353,7 @@ class main():
         area = moments['m00']
         
         if(area > 10):
+            dayCount += 1
             print('Завершаем день и продаём улов!')
             sleep(5)
             send_keys("{t down}")
@@ -351,10 +377,11 @@ class main():
     
     
     # Поиск окна повышения уровня
-    def FindLevelUp(img):
+    def FindLevelUp(self):
         global sethook
         global levelupCount
         
+        img = self.screenshot.LevelupZone()
         img = cv2.medianBlur(img, 3)
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
         
@@ -388,7 +415,10 @@ class main():
         
     
     # Поиск окна с получением награды за челлендж
-    def FindChallenge(img):
+    def FindChallenge(self):
+        global sethook
+        
+        img = self.screenshot.ChallengeZone()
         img = cv2.medianBlur(img, 3)
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
         
@@ -422,54 +452,84 @@ class main():
         global trashCount
         global hookCount
         global levelupCount
+        global dayCount
         global restart
+        global data
         
         if (sethook == False
             and gw.getWindowsWithTitle('FishingPlanet')[0].isActive):
+            
             restart = 0
             hookCount += 1
-            print('\nРыб поймано: ' + str(fishCount))
-            print('Мусора поймано: ' + str(trashCount))
-            print('Уровней получено: ' + str(levelupCount))
-            print('Ждём: 8 сек')
+            
+            
+            print('\nЖдём: 8 сек')
             sleep(8)
-            print('Забрасываем!')
+            print('Дней пройдено: ' + str(dayCount))
+            print('Рыб поймано: ' + str(fishCount))
+            print('Мусора поймано / отпущено рыб: ' + str(trashCount))
+            print('Уровней получено: ' + str(levelupCount))
             print('Сделано забросов: ' + str(hookCount))
             send_keys("{VK_SPACE down}")
             sleep(random.randint(castingMin, castingMax) / 10)
             send_keys("{VK_SPACE up}")
+            
+            new_data = {
+                'fishCount': fishCount,
+                'trashCount': trashCount,
+                'hookCount': hookCount,
+                'levelupCount': levelupCount,
+                'dayCount': dayCount
+            }
+            
+            main.TelegramStat(new_data=new_data)
+            
             sethook = True
     # --------------------------------
     
+    def FishingBot(self):
+        global sethook
+        global restart
+        while True:
+        
+            if (gw.getWindowsWithTitle('FishingPlanet')[0].isActive):
+                restart += 1
+                if(restart > 1000):
+                    print('\n--- ПЕРЕЗАПУСК ---')
+                    send_keys("{VK_ESCAPE down}")
+                    send_keys("{VK_ESCAPE up}")
+                    sethook = False
+        
+            self.screenshot.Screenshot()
+        
+            self.FindFish()
+            self.FindLength()
+            self.FindStrength()
+            self.FindTake()
+            main.HookSet()
+
+            cv2.waitKey(1)
+        
+    def TelegramBot(self, data):
+        tgbot.start(data)
     
-    
+    def TelegramStat(new_data):
+        data.update(new_data)
+        
+        
 if __name__ == "__main__":
     while True:
-        #start_time = perf_counter()
+
+        tg_thread = threading.Thread(target=main().TelegramBot, args=(data,))
+        fish_thread = threading.Thread(target=main().FishingBot)
         
-        if (gw.getWindowsWithTitle('FishingPlanet')[0].isActive):
-            restart += 1
-            print(restart)
-            if(restart > 1000):
-                print('\n--- ПЕРЕЗАПУСК ---')
-                send_keys("{VK_ESCAPE down}")
-                send_keys("{VK_ESCAPE up}")
-                sethook = False
+        tg_thread.start()
+        fish_thread.start()
         
-        screenshot = Screen()
-        screenshot.Screenshot()
-        
-        main.FindFish(img=screenshot.FishZone())
-        main.FindLength(img=screenshot.LengthZone())
-        main.FindStrength(img=screenshot.StrengthZone())
-        main.FindTake(img=screenshot.TakeZone())
-        main.HookSet()
+        tg_thread.join()
+        fish_thread.join()
+
         
         
-            
-        #end_time = perf_counter()MENUdown
-        #print(f'Выполнение заняло {end_time- start_time: 0.2f} секунд.')
-        
-        cv2.waitKey(1)
         
         
