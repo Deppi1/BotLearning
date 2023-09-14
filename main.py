@@ -12,8 +12,8 @@ from time import sleep, perf_counter
 
 
 hookHeight = 90 # min = 15, max = 120
-castingMin = 16 # Время заброса в ms
-castingMax = 18 # Время заброса в ms
+castingMin = 18 # Время заброса в ms
+castingMax = 20 # Время заброса в ms
 
 fishCount = 0
 trashCount = 0
@@ -518,16 +518,15 @@ class main():
         
         
 if __name__ == "__main__":
-    while True:
-
-        tg_thread = threading.Thread(target=main().TelegramBot, args=(data,))
-        fish_thread = threading.Thread(target=main().FishingBot)
+    
+    tg_thread = threading.Thread(target=main().TelegramBot, args=(data,))
+    fish_thread = threading.Thread(target=main().FishingBot)
         
-        tg_thread.start()
-        fish_thread.start()
+    tg_thread.start()
+    fish_thread.start()
         
-        tg_thread.join()
-        fish_thread.join()
+    tg_thread.join()
+    fish_thread.join()
 
         
         
